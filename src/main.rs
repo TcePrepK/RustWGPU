@@ -1,3 +1,3 @@
 fn main() {
-    rust_wgpu::run();
+    pollster::block_on(rust_wgpu::run());
 }
