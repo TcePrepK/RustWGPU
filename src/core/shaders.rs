@@ -1,3 +1,4 @@
+use crate::core::model::Vertex;
 use wgpu::*;
 
 pub struct ShaderPipeline {
@@ -5,21 +6,26 @@ pub struct ShaderPipeline {
 }
 
 impl ShaderPipeline {
-    pub fn new(device: &Device, config: &SurfaceConfiguration) -> Self {
-        let shader = device.create_shader_module(include_wgsl!("../shaders/main.wgsl"));
-        let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
+    pub fn new(
+        device: &Device,
+        config: &SurfaceConfiguration,
+        label: &str,
+        wgsl_data: ShaderModuleDescriptor,
+    ) -> Self {
+        let shader = device.create_shader_module(wgsl_data);
+        let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+            label: Some(&format!("{} Pipeline Layout", label)),
             bind_group_layouts: &[],
             push_constant_ranges: &[],
         });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
+            label: Some(&format!("{} Pipeline", label)),
+            layout: Some(&pipeline_layout),
             vertex: VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[Vertex::desc()],
                 compilation_options: PipelineCompilationOptions::default(),
             },
             fragment: Some(FragmentState {

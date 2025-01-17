@@ -1,3 +1,4 @@
+use crate::core::model::Model;
 use crate::core::shaders::ShaderPipeline;
 use dpi::PhysicalSize;
 use std::iter::once;
@@ -17,7 +18,19 @@ struct State<'a> {
     queue: Queue,
     config: SurfaceConfiguration,
     size: PhysicalSize<u32>,
-    shader_pipeline: ShaderPipeline,
+    shaders: RenderManager,
+}
+
+struct RenderManager {
+    main_shader: ShaderPipeline,
+    tutorial_model: Model,
+}
+
+impl RenderManager {
+    fn render(&self, render_pass: &mut RenderPass) {
+        self.main_shader.start(render_pass);
+        self.tutorial_model.render(render_pass);
+    }
 }
 
 impl<'a> State<'a> {
@@ -86,7 +99,17 @@ impl<'a> State<'a> {
             desired_maximum_frame_latency: 2,
         };
 
-        let shader_pipeline = ShaderPipeline::new(&device, &config);
+        let main_shader = ShaderPipeline::new(
+            &device,
+            &config,
+            "Main",
+            include_wgsl!("../shaders/main.wgsl"),
+        );
+        let tutorial_model = Model::new(&device);
+        let shaders = RenderManager {
+            main_shader,
+            tutorial_model,
+        };
 
         Self {
             window,
@@ -95,7 +118,7 @@ impl<'a> State<'a> {
             queue,
             config,
             size,
-            shader_pipeline,
+            shaders,
         }
     }
 
@@ -135,8 +158,7 @@ impl<'a> State<'a> {
                 timestamp_writes: None,
             });
 
-            self.shader_pipeline.start(&mut render_pass);
-            render_pass.draw(0..3, 0..1);
+            self.shaders.render(&mut render_pass);
         }
 
         // submit will accept anything that implements IntoIter
