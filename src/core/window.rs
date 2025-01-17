@@ -183,8 +183,8 @@ pub async fn init() {
         web_sys::window()
             .and_then(|win| win.document())
             .and_then(|doc| {
-                let dst = doc.get_element_by_id("wasm-example")?;
-                let canvas = web_sys::Element::from(window.canvas()?);
+                let dst = doc.query_selector("body").ok().unwrap().unwrap();
+                let canvas = web_sys::Element::from(window.canvas().unwrap());
                 dst.append_child(&canvas).ok()?;
                 Some(())
             })
