@@ -1,3 +1,4 @@
+use crate::core::shaders::ShaderPipeline;
 use dpi::PhysicalSize;
 use std::iter::once;
 use wgpu::*;
@@ -10,15 +11,13 @@ use winit::{
 };
 
 struct State<'a> {
+    window: &'a Window,
     surface: Surface<'a>,
     device: Device,
     queue: Queue,
     config: SurfaceConfiguration,
     size: PhysicalSize<u32>,
-    // The window must be declared after the surface so
-    // it gets dropped after it as the surface contains
-    // unsafe references to the window's resources.
-    window: &'a Window,
+    shader_pipeline: ShaderPipeline,
 }
 
 impl<'a> State<'a> {
@@ -87,6 +86,8 @@ impl<'a> State<'a> {
             desired_maximum_frame_latency: 2,
         };
 
+        let shader_pipeline = ShaderPipeline::new(&device, &config);
+
         Self {
             window,
             surface,
@@ -94,6 +95,7 @@ impl<'a> State<'a> {
             queue,
             config,
             size,
+            shader_pipeline,
         }
     }
 
@@ -113,7 +115,7 @@ impl<'a> State<'a> {
             });
 
         {
-            let _render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
+            let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
                 label: Some("Render Pass"),
                 color_attachments: &[Some(RenderPassColorAttachment {
                     view: &view,
@@ -132,6 +134,9 @@ impl<'a> State<'a> {
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
+
+            self.shader_pipeline.start(&mut render_pass);
+            render_pass.draw(0..3, 0..1);
         }
 
         // submit will accept anything that implements IntoIter
