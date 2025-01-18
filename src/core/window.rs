@@ -1,5 +1,6 @@
 use crate::core::model::Model;
 use crate::core::shaders::ShaderPipeline;
+use crate::core::texture::Texture;
 use dpi::PhysicalSize;
 use std::iter::once;
 use wgpu::*;
@@ -24,11 +25,13 @@ struct State<'a> {
 struct RenderManager {
     main_shader: ShaderPipeline,
     tutorial_model: Model,
+    texture: Texture,
 }
 
 impl RenderManager {
     fn render(&self, render_pass: &mut RenderPass) {
         self.main_shader.start(render_pass);
+        self.texture.bind(render_pass);
         self.tutorial_model.render(render_pass);
     }
 }
@@ -99,16 +102,25 @@ impl<'a> State<'a> {
             desired_maximum_frame_latency: 2,
         };
 
+        let texture = Texture::from_bytes(
+            &device,
+            &queue,
+            include_bytes!("../../assets/images/happy-tree.png"),
+            "happy-tree",
+        )
+        .unwrap();
         let main_shader = ShaderPipeline::new(
             &device,
             &config,
             "Main",
-            include_wgsl!("../shaders/main.wgsl"),
+            include_wgsl!("../../assets/shaders/main.wgsl"),
+            &[&texture.bind_group_layout],
         );
         let tutorial_model = Model::new(&device);
         let shaders = RenderManager {
             main_shader,
             tutorial_model,
+            texture,
         };
 
         Self {
@@ -182,7 +194,7 @@ impl<'a> State<'a> {
     }
 
     pub fn get_window(&self) -> &Window {
-        &self.window
+        self.window
     }
 }
 

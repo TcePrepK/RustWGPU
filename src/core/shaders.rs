@@ -11,11 +11,12 @@ impl ShaderPipeline {
         config: &SurfaceConfiguration,
         label: &str,
         wgsl_data: ShaderModuleDescriptor,
+        bind_group_layouts: &[&BindGroupLayout],
     ) -> Self {
         let shader = device.create_shader_module(wgsl_data);
         let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label: Some(&format!("{} Pipeline Layout", label)),
-            bind_group_layouts: &[],
+            bind_group_layouts,
             push_constant_ranges: &[],
         });
 
